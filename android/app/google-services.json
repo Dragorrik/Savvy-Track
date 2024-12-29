@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "235513944296",
+    "project_id": "savvy-track-48523",
+    "storage_bucket": "savvy-track-48523.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:235513944296:android:04ad8466d2189f42d5d15d",
+        "android_client_info": {
+          "package_name": "com.example.savvy_track"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyB7GutzXRcGdP2aeD_tz7e0ozK3kDibkZc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,7 +4,17 @@ import 'package:savvy_track/blocs/budget/bloc/budget_bloc.dart';
 import 'package:savvy_track/blocs/expense/bloc/expense_bloc.dart';
 import 'package:savvy_track/pages/splash_page.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+
+final GlobalKey<ScaffoldMessengerState> scaffoldMessengerKey =
+    GlobalKey<ScaffoldMessengerState>();
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MultiBlocProvider(providers: [
     BlocProvider(create: (_) => BudgetBloc()),
     BlocProvider(create: (_) => ExpenseBloc()),
@@ -17,6 +27,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      scaffoldMessengerKey: scaffoldMessengerKey,
       theme: ThemeData(
         // Primary Color
         primaryColor: Colors.blue,
@@ -59,7 +70,7 @@ class MyApp extends StatelessWidget {
         inputDecorationTheme: const InputDecorationTheme(
           border: OutlineInputBorder(),
           focusedBorder: OutlineInputBorder(
-            borderSide: BorderSide(color: Colors.blueAccent),
+            borderSide: BorderSide(color: Color(0XFF005427)),
           ),
           enabledBorder: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.grey),
