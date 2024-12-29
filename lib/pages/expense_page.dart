@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:savvy_track/blocs/budget/bloc/budget_state.dart';
-import 'package:savvy_track/blocs/practice_part_two/bloc/practice_part_two_bloc.dart';
+import 'package:savvy_track/blocs/expense/bloc/expense_bloc.dart';
 import 'package:savvy_track/pages/budget_page.dart';
 import 'package:savvy_track/widgets/pie_chart_widget.dart';
 
-class PracticePartTwoPage extends StatelessWidget {
-  PracticePartTwoPage({super.key});
+class ExpensePage extends StatelessWidget {
+  ExpensePage({super.key});
 
   // Controllers for text inputs
   final TextEditingController _titleController = TextEditingController();
@@ -35,10 +35,8 @@ class PracticePartTwoPage extends StatelessWidget {
             context: context,
             isScrollControlled: true,
             builder: (sheetContext) {
-              // Provide Bloc to the bottom sheet
               return BlocProvider.value(
-                value:
-                    BlocProvider.of<ExpenseBloc>(context), // Pass current bloc
+                value: BlocProvider.of<ExpenseBloc>(context),
                 child: Padding(
                   padding: EdgeInsets.only(
                     top: 20,
@@ -49,7 +47,6 @@ class PracticePartTwoPage extends StatelessWidget {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      // Title Field
                       TextField(
                         controller: _titleController,
                         decoration: const InputDecoration(
@@ -58,8 +55,6 @@ class PracticePartTwoPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 10),
-
-                      // Amount Field
                       TextField(
                         controller: _expenseController,
                         keyboardType: TextInputType.number,
@@ -69,44 +64,31 @@ class PracticePartTwoPage extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 20),
-
-                      // Add Button
                       ElevatedButton(
                         onPressed: () {
                           final title = _titleController.text.trim();
                           final expenseText = _expenseController.text.trim();
-
                           if (title.isNotEmpty && expenseText.isNotEmpty) {
                             try {
                               final amount = double.parse(expenseText);
-
-                              // Add valid expense
                               Expense newExpense =
                                   Expense(title: title, amount: amount);
                               context
                                   .read<ExpenseBloc>()
                                   .add(AddExpenses(expense: newExpense));
-
-                              // Clear input
                               _titleController.clear();
                               _expenseController.clear();
-
-                              Navigator.pop(context); // Close the sheet
+                              Navigator.pop(context);
                             } catch (e) {
-                              // Clear input
                               _titleController.clear();
                               _expenseController.clear();
-                              Navigator.pop(context); // Close the sheet
+                              Navigator.pop(context);
                               ScaffoldMessenger.of(context).showSnackBar(
                                 const SnackBar(
                                     content: Text("Enter a valid amount!")),
                               );
                             }
                           } else {
-                            // Clear input
-                            _titleController.clear();
-                            _expenseController.clear();
-                            Navigator.pop(context); // Close the sheet
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content: Text("Fields cannot be empty!")),
@@ -127,8 +109,7 @@ class PracticePartTwoPage extends StatelessWidget {
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       body: BlocBuilder<ExpenseBloc, ExpenseState>(
         builder: (context, state) {
-          bool isAscending = true; // Default
-          // Error Message UI
+          bool isAscending = true;
           if (state is ExpensesError) {
             return Center(
               child: Padding(
@@ -143,7 +124,6 @@ class PracticePartTwoPage extends StatelessWidget {
                     const SizedBox(height: 10),
                     ElevatedButton(
                       onPressed: () {
-                        // Restore old expenses
                         context.read<ExpenseBloc>().add(FetchExpensesHistory());
                       },
                       child: const Text("Back to History"),
@@ -153,154 +133,149 @@ class PracticePartTwoPage extends StatelessWidget {
               ),
             );
           }
-
-          // Fetch List of Expenses
           List<Expense> expenses = [];
           if (state is ExpensesUpdated) {
             expenses = state.expenses;
-            isAscending = state.isAscending; // Updated model
+            isAscending = state.isAscending;
           }
-
-          return Column(
-            children: [
-              // Expenses List
-              Expanded(
-                child: expenses.isEmpty
-                    ? const Center(child: Text("No Expenses Added Yet!"))
+          return SingleChildScrollView(
+            child: Column(
+              //mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                expenses.isEmpty
+                    ? SizedBox(
+                        height: MediaQuery.of(context).size.height * 0.8,
+                        child: const Center(
+                          child: Text("No Expenses Added Yet!",
+                              style: TextStyle(fontSize: 18)),
+                        ),
+                      )
                     : Column(
                         children: [
                           Container(
                               margin: const EdgeInsets.all(25),
-                              child:
-                                  buildPieChart(expenses, context)), //pie chart
-                          const SizedBox(
-                            height: 20,
-                          ),
+                              child: buildPieChart(expenses, context)),
+                          const SizedBox(height: 20),
                           ElevatedButton.icon(
                             onPressed: () {
-                              //Sorting
                               context
                                   .read<ExpenseBloc>()
                                   .add(SortExpenses(isAscending: !isAscending));
                             },
                             icon: Icon(isAscending
                                 ? Icons.arrow_upward
-                                : Icons.arrow_downward), // Dynamic icon
+                                : Icons.arrow_downward),
                             label: Text(
                                 isAscending ? "Low to High" : "High to Low"),
                           ),
-                          const SizedBox(
-                            height: 20,
-                          ),
-                          Expanded(
-                            child: ListView.builder(
-                              itemCount: expenses.length,
-                              itemBuilder: (context, index) {
-                                final expense = expenses[index];
-                                return ListTile(
-                                  title: Text(expense.title),
-                                  subtitle: Text(
-                                      "\$${expense.amount.toStringAsFixed(2)}"),
-                                  trailing: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      IconButton(
-                                        icon: const Icon(Icons.edit),
-                                        onPressed: () {
-                                          // Show bottom sheet for editing
-                                          _showEditExpenseSheet(
-                                              context, expense);
-                                        },
-                                      ),
-                                      IconButton(
-                                        icon: const Icon(Icons.delete),
-                                        onPressed: () {
-                                          context.read<ExpenseBloc>().add(
-                                              RemoveExpense(expense: expense));
-                                        },
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            ),
+                          const SizedBox(height: 20),
+                          ListView.builder(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: expenses.length,
+                            itemBuilder: (context, index) {
+                              final expense = expenses[index];
+                              return ListTile(
+                                title: Text(expense.title),
+                                subtitle: Text(
+                                    "\$${expense.amount.toStringAsFixed(2)}"),
+                                trailing: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    IconButton(
+                                      icon: const Icon(Icons.edit),
+                                      onPressed: () {
+                                        _showEditExpenseSheet(context, expense);
+                                      },
+                                    ),
+                                    IconButton(
+                                      icon: const Icon(Icons.delete),
+                                      onPressed: () {
+                                        context.read<ExpenseBloc>().add(
+                                            RemoveExpense(expense: expense));
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
-              ),
-            ],
+              ],
+            ),
           );
         },
       ),
     );
   }
+}
 
-  void _showEditExpenseSheet(BuildContext context, Expense expense) {
-    final TextEditingController editTitleController =
-        TextEditingController(text: expense.title);
-    final TextEditingController editAmountController =
-        TextEditingController(text: expense.amount.toString());
+void _showEditExpenseSheet(BuildContext context, Expense expense) {
+  final TextEditingController editTitleController =
+      TextEditingController(text: expense.title);
+  final TextEditingController editAmountController =
+      TextEditingController(text: expense.amount.toString());
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      builder: (sheetContext) {
-        return BlocProvider.value(
-          value: BlocProvider.of<ExpenseBloc>(context),
-          child: Padding(
-            padding: EdgeInsets.only(
-              top: 20,
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 20,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: editTitleController,
-                  decoration: const InputDecoration(
-                    labelText: "Expense Title",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                TextField(
-                  controller: editAmountController,
-                  keyboardType: TextInputType.number,
-                  decoration: const InputDecoration(
-                    labelText: "Expense Amount",
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton(
-                  onPressed: () {
-                    final updatedTitle = editTitleController.text.trim();
-                    final updatedAmount =
-                        double.tryParse(editAmountController.text.trim()) ?? 0;
-
-                    if (updatedTitle.isNotEmpty && updatedAmount > 0) {
-                      // Dispatch update event
-                      context.read<ExpenseBloc>().add(
-                            UpdateExpense(
-                              updatedExpense: Expense(
-                                title: updatedTitle,
-                                amount: updatedAmount,
-                              ),
-                            ),
-                          );
-
-                      Navigator.pop(context);
-                    }
-                  },
-                  child: const Text("Update Expense"),
-                ),
-              ],
-            ),
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    builder: (sheetContext) {
+      return BlocProvider.value(
+        value: BlocProvider.of<ExpenseBloc>(context),
+        child: Padding(
+          padding: EdgeInsets.only(
+            top: 20,
+            left: 16,
+            right: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
           ),
-        );
-      },
-    );
-  }
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: editTitleController,
+                decoration: const InputDecoration(
+                  labelText: "Expense Title",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 10),
+              TextField(
+                controller: editAmountController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: "Expense Amount",
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () {
+                  final updatedTitle = editTitleController.text.trim();
+                  final updatedAmount =
+                      double.tryParse(editAmountController.text.trim()) ?? 0;
+
+                  if (updatedTitle.isNotEmpty && updatedAmount > 0) {
+                    // Dispatch update event
+                    context.read<ExpenseBloc>().add(
+                          UpdateExpense(
+                            updatedExpense: Expense(
+                              title: updatedTitle,
+                              amount: updatedAmount,
+                            ),
+                          ),
+                        );
+
+                    Navigator.pop(context);
+                  }
+                },
+                child: const Text("Update Expense"),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
 }

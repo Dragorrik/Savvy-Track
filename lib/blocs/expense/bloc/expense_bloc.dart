@@ -3,8 +3,8 @@ import 'package:equatable/equatable.dart';
 
 import 'package:savvy_track/blocs/budget/bloc/budget_state.dart';
 
-part 'practice_part_two_event.dart';
-part 'practice_part_two_state.dart';
+part 'expense_event.dart';
+part 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
   bool isAscending = true; // Sorting order state
