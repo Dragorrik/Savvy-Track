@@ -39,7 +39,8 @@ class LoginPage extends StatelessWidget {
             const SizedBox(height: 8),
             TextButton(
               onPressed: () {
-                Navigator.pushNamed(context, '/register'); // Navigate to Register Page
+                Navigator.pushNamed(
+                    context, '/register'); // Navigate to Register Page
               },
               child: const Text("Don't have an account? Register"),
             ),
