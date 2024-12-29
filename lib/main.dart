@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:savvy_track/blocs/budget/bloc/budget_bloc.dart';
 import 'package:savvy_track/blocs/expense/bloc/expense_bloc.dart';
-import 'package:savvy_track/pages/expense_page.dart';
 import 'package:savvy_track/pages/splash_page.dart';
 
 void main() {

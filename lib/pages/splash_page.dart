@@ -1,3 +1,4 @@
+import 'package:animated_text_kit/animated_text_kit.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:savvy_track/pages/expense_page.dart';
@@ -15,12 +16,11 @@ class _SplashScreenState extends State<SplashScreen> {
     super.initState();
 
     // Simulate loading time before navigating to the main page
-    // Future.delayed(const Duration(seconds: 4), () {
-    //   Navigator.of(context).pushReplacement(
-    //     MaterialPageRoute(
-    //         builder: (_) => ExpensePage()),
-    //   );
-    // });
+    Future.delayed(const Duration(seconds: 4), () {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => ExpensePage()),
+      );
+    });
   }
 
   @override
@@ -48,38 +48,58 @@ class _SplashScreenState extends State<SplashScreen> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // App Logo or Icon
-              Image.asset(
-                'assets/images/money.png',
-                height: 150,
-              ),
-              const SizedBox(height: 20),
+              Container(
+                padding: const EdgeInsets.all(20),
+                margin: const EdgeInsets.all(20),
+                decoration: BoxDecoration(
+                  color:
+                      Colors.black.withOpacity(0.6), // Semi-transparent color
+                  borderRadius: BorderRadius.circular(15),
+                ),
+                child: Column(
+                  children: [
+                    // App Logo or Icon
+                    Image.asset(
+                      'assets/images/money.png',
+                      height: 150,
+                    ),
+                    //const SizedBox(height: 10),
 
-              // App Name
-              const Text(
-                "SavvyTrack",
-                style: TextStyle(
-                  fontSize: 40,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.green,
-                  letterSpacing: 1.5,
+                    // App Name
+                    DefaultTextStyle(
+                      style: const TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Color(0XFFFFDC44),
+                        letterSpacing: 1.5,
+                      ),
+                      child: AnimatedTextKit(
+                        animatedTexts: [
+                          TypewriterAnimatedText('SavvyTrack',
+                              speed: const Duration(milliseconds: 150)),
+                        ],
+                        totalRepeatCount: 1, // Show animation once
+                      ),
+                    ),
+
+                    const SizedBox(height: 10),
+
+                    // Tagline
+                    const Text(
+                      "Track your expenses,\nmaster your budget!",
+                      style: TextStyle(
+                        fontSize: 20,
+                        color: Color(0XFFE1E3FA),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-              const SizedBox(height: 10),
-
-              // Tagline
-              const Text(
-                "Track your expenses,\nmaster your budget!",
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Colors.green,
-                ),
-              ),
-              const SizedBox(height: 40),
+              const SizedBox(height: 30),
 
               // Loading Indicator
               const SpinKitWave(
-                color: Colors.white,
+                color: Color(0XFFE1E3FA),
                 size: 50.0,
               ),
               const SizedBox(height: 20),
@@ -88,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 40),
                 child: LinearProgressIndicator(
-                  color: Colors.greenAccent,
+                  color: const Color(0XFF32D735),
                   backgroundColor: Colors.white.withOpacity(0.3),
                 ),
               ),
