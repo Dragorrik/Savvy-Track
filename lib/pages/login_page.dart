@@ -16,6 +16,13 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController passwordController = TextEditingController();
   final GlobalKey<FormState> formKey = GlobalKey<FormState>();
 
+  @override
+  void initState() {
+    super.initState();
+    emailController.text = 'aarik@gmail.com';
+    passwordController.text = '123456';
+  }
+
   bool isLoading = false;
 
   Future<void> loginUser() async {

@@ -1,84 +1,89 @@
 import 'package:bloc/bloc.dart';
+import 'package:cloud_firestore/cloud_firestore.dart'; // Firebase Firestore
 import 'package:equatable/equatable.dart';
-
-import 'package:savvy_track/blocs/budget/bloc/budget_state.dart';
+import 'package:savvy_track/models/expense_model.dart';
 
 part 'expense_event.dart';
 part 'expense_state.dart';
 
 class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
-  bool isAscending = true; // Sorting order state
+  bool isAscending = true; // Sorting order
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
   ExpenseBloc() : super(PracticePartTwoInitial()) {
+    // Stream Expenses (Real-Time Updates)
+    on<StreamExpenses>((event, emit) async {
+      await emit.forEach(
+        _firestore.collection('expenses').snapshots(), // Firestore Stream
+        onData: (snapshot) {
+          // Convert documents to Expense objects
+          final expenses = snapshot.docs
+              .map((doc) =>
+                  Expense.fromMap(doc.data(), id: doc.id)) // Assign ID here
+              .toList();
+
+          // Sort based on order preference
+          expenses.sort((a, b) => isAscending
+              ? a.amount.compareTo(b.amount)
+              : b.amount.compareTo(a.amount));
+
+          return ExpensesUpdated(expenses: expenses, isAscending: isAscending);
+        },
+        onError: (error, stackTrace) {
+          return _emitErrorState("Failed to stream expenses. Error: $error");
+        },
+      );
+    });
+
     // Add Expense
-    on<AddExpenses>((event, emit) {
-      if (event.expense.title.isEmpty || event.expense.amount <= 0) {
-        if (state is ExpensesUpdated) {
-          final currentState = state as ExpensesUpdated;
-          emit(ExpensesError(
-              oldExpenses: currentState.expenses,
-              message:
-                  "Invalid expense! Title can't be empty, and amount must be positive."));
-        } else {
-          emit(const ExpensesError(
-              oldExpenses: [],
-              message:
-                  "Invalid expense! Title can't be empty, and amount must be positive."));
-        }
-        return;
-      }
-
-      if (state is ExpensesUpdated) {
-        final currentState = state as ExpensesUpdated;
-        final updatedList = List<Expense>.from(currentState.expenses)
-          ..add(event.expense);
-
-        updatedList.sort((a, b) => currentState.isAscending
-            ? a.amount.compareTo(b.amount)
-            : b.amount.compareTo(a.amount));
-
-        emit(ExpensesUpdated(
-            expenses: updatedList, isAscending: currentState.isAscending));
-      } else if (state is ExpensesError) {
-        final errorState = state as ExpensesError;
-        final updatedList = List<Expense>.from(errorState.oldExpenses)
-          ..add(event.expense);
-        emit(ExpensesUpdated(expenses: updatedList, isAscending: isAscending));
-      } else {
-        emit(ExpensesUpdated(
-            expenses: [event.expense], isAscending: isAscending));
+    on<AddExpenses>((event, emit) async {
+      try {
+        // Add new expense to Firestore with auto-generated ID
+        await _firestore.collection('expenses').add(event.expense.toMap());
+      } catch (e) {
+        emit(_emitErrorState("Failed to add expense. Error: $e"));
       }
     });
 
-    // Update Expense
-    on<UpdateExpense>((event, emit) {
-      if (state is ExpensesUpdated) {
-        final currentState = state as ExpensesUpdated;
-        final updatedExpenses = List<Expense>.from(currentState.expenses);
+    // Update Expense Event
+    on<UpdateExpense>((event, emit) async {
+      try {
+        // Ensure ID exists before updating
+        if (event.updatedExpense.id != null) {
+          // Check for ID existence
+          await _firestore
+              .collection('expenses')
+              .doc(event.updatedExpense.id) // Use the stored ID
+              .update(event.updatedExpense.toMap());
 
-        final index = updatedExpenses.indexWhere(
-          (e) => e.title == event.updatedExpense.title,
-        );
-
-        if (index != -1) {
-          updatedExpenses[index] = Expense(
-            title: updatedExpenses[index].title,
-            amount: updatedExpenses[index].amount + event.updatedExpense.amount,
-          );
+          // Fetch the updated list
+          add(StreamExpenses());
         } else {
-          updatedExpenses.add(event.updatedExpense);
+          emit(_emitErrorState("Expense ID is missing!"));
         }
-
-        updatedExpenses.sort((a, b) => currentState.isAscending
-            ? a.amount.compareTo(b.amount)
-            : b.amount.compareTo(a.amount));
-
-        emit(ExpensesUpdated(
-            expenses: updatedExpenses, isAscending: currentState.isAscending));
+      } catch (e) {
+        emit(_emitErrorState("Failed to update expense. Error: $e"));
       }
     });
 
-    // Sorting Expenses
+    // Delete Expense
+    on<RemoveExpense>((event, emit) async {
+      try {
+        if (event.expense.id != null) {
+          // Check for ID existence
+          await _firestore
+              .collection('expenses')
+              .doc(event.expense.id)
+              .delete();
+        } else {
+          emit(_emitErrorState("Expense ID is missing!"));
+        }
+      } catch (e) {
+        emit(_emitErrorState("Failed to delete expense. Error: $e"));
+      }
+    });
+
+    // Sort Expenses (in-memory sorting)
     on<SortExpenses>((event, emit) {
       if (state is ExpensesUpdated) {
         final currentState = state as ExpensesUpdated;
@@ -94,33 +99,35 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
       }
     });
 
-    // Delete Expense
-    on<RemoveExpense>((event, emit) {
-      if (state is ExpensesUpdated) {
-        final currentState = state as ExpensesUpdated;
-        final updatedExpenses = List<Expense>.from(currentState.expenses);
-        updatedExpenses.remove(event.expense);
+    // Fetch Expenses History (One-time fetch)
+    on<FetchExpensesHistory>((event, emit) async {
+      try {
+        final querySnapshot = await _firestore.collection('expenses').get();
 
-        updatedExpenses.sort((a, b) => currentState.isAscending
+        final expenses = querySnapshot.docs
+            .map((doc) => Expense.fromMap(doc.data(), id: doc.id))
+            .toList();
+
+        expenses.sort((a, b) => isAscending
             ? a.amount.compareTo(b.amount)
             : b.amount.compareTo(a.amount));
 
-        emit(ExpensesUpdated(
-            expenses: updatedExpenses, isAscending: currentState.isAscending));
+        emit(ExpensesUpdated(expenses: expenses, isAscending: isAscending));
+      } catch (e) {
+        emit(_emitErrorState("Failed to fetch expenses. Error: $e"));
       }
     });
+  }
 
-    // Fetch Expenses History
-    on<FetchExpensesHistory>((event, emit) {
-      if (state is ExpensesUpdated) {
-        emit(state);
-      } else if (state is ExpensesError) {
-        final errorState = state as ExpensesError;
-        emit(ExpensesUpdated(
-            expenses: errorState.oldExpenses, isAscending: isAscending));
-      } else {
-        emit(ExpensesUpdated(expenses: const [], isAscending: isAscending));
-      }
-    });
+  // Helper method for error states
+  ExpensesError _emitErrorState(String message) {
+    if (state is ExpensesUpdated) {
+      final currentState = state as ExpensesUpdated;
+      return ExpensesError(
+          oldExpenses: currentState.expenses, message: message);
+    } else {
+      return const ExpensesError(
+          oldExpenses: [], message: "An error occurred.");
+    }
   }
 }

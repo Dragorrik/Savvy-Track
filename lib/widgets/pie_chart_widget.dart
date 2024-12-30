@@ -1,7 +1,7 @@
 // Pie Chart Widget
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
-import 'package:savvy_track/blocs/budget/bloc/budget_state.dart';
+import 'package:savvy_track/models/expense_model.dart';
 
 Widget buildPieChart(List<Expense> expenses, BuildContext context) {
   Map<String, double> expenseData = {};
@@ -11,7 +11,7 @@ Widget buildPieChart(List<Expense> expenses, BuildContext context) {
   }
 
   return SizedBox(
-    height: MediaQuery.of(context).size.height * .4,
+    height: MediaQuery.of(context).size.height * .35,
     child: PieChart(
       PieChartData(
         sectionsSpace: 8,
@@ -40,7 +40,7 @@ Widget buildPieChart(List<Expense> expenses, BuildContext context) {
                   color: Color.fromARGB(129, 209, 208, 208), // Border color
                   width: 2, // Border width
                 ),
-                radius: 80,
+                radius: 100,
                 title: '', // Leave title blank for custom badge positioning
                 badgeWidget: Column(
                   mainAxisSize: MainAxisSize.min,
@@ -50,7 +50,7 @@ Widget buildPieChart(List<Expense> expenses, BuildContext context) {
                           ? "${entry.key.substring(0, 8)}..."
                           : entry.key,
                       style: const TextStyle(
-                        fontSize: 12,
+                        //fontSize: 12,
                         fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -59,7 +59,7 @@ Widget buildPieChart(List<Expense> expenses, BuildContext context) {
                     Text(
                       "\$${entry.value.toStringAsFixed(2)}",
                       style: const TextStyle(
-                        fontSize: 10,
+                        // fontSize: 10,
                         //fontWeight: FontWeight.bold,
                         color: Colors.black,
                       ),
@@ -68,7 +68,7 @@ Widget buildPieChart(List<Expense> expenses, BuildContext context) {
                   ],
                 ),
                 badgePositionPercentageOffset:
-                    0.7, // Moves badge slightly outside the chart
+                    1.1, // Moves badge slightly outside the chart
               ),
             )
             .toList(),

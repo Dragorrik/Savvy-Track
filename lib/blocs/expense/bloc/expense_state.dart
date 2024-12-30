@@ -7,8 +7,10 @@ sealed class ExpenseState extends Equatable {
   List<Object> get props => [];
 }
 
+// Initial state
 final class PracticePartTwoInitial extends ExpenseState {}
 
+// State when expenses are updated
 class ExpensesUpdated extends ExpenseState {
   final List<Expense> expenses;
   final bool isAscending;
@@ -19,6 +21,7 @@ class ExpensesUpdated extends ExpenseState {
   List<Object> get props => [expenses, isAscending];
 }
 
+// State for errors
 class ExpensesError extends ExpenseState {
   final String message;
   final List<Expense> oldExpenses;
@@ -27,4 +30,17 @@ class ExpensesError extends ExpenseState {
 
   @override
   List<Object> get props => [message, oldExpenses];
+}
+
+// **NEW STATE** - Loading state for Firebase sync
+class ExpensesLoading extends ExpenseState {}
+
+// **NEW STATE** - Stream state for Firebase updates
+class ExpensesStreamUpdated extends ExpenseState {
+  final List<Expense> expenses;
+
+  const ExpensesStreamUpdated({required this.expenses});
+
+  @override
+  List<Object> get props => [expenses];
 }
