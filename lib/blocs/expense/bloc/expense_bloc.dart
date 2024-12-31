@@ -38,11 +38,13 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     // Add Expense
     on<AddExpenses>((event, emit) async {
       try {
-        // Query Firestore for any expense with the same title
+        // Convert title to lowercase for case-insensitive matching
+        final inputTitle = event.expense.title.toLowerCase();
+
+        // Query Firestore for any expense with the same title (case-insensitive)
         final querySnapshot = await _firestore
             .collection('expenses')
-            .where('title',
-                isEqualTo: event.expense.title) // Check for same title
+            .where('title', isEqualTo: inputTitle) // Match lowercase title
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {

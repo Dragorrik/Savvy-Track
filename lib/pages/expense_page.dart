@@ -213,6 +213,7 @@ class ExpensePage extends StatelessWidget {
                   ));
               PopUpWidgets.showBlurredSnackBar(
                   context, 'Your data is updated !!');
+              _expenseController.clear();
               Navigator.pop(context);
             }
           },
