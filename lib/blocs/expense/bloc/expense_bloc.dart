@@ -38,10 +38,32 @@ class ExpenseBloc extends Bloc<ExpenseEvent, ExpenseState> {
     // Add Expense
     on<AddExpenses>((event, emit) async {
       try {
-        // Add new expense to Firestore with auto-generated ID
-        await _firestore.collection('expenses').add(event.expense.toMap());
+        // Query Firestore for any expense with the same title
+        final querySnapshot = await _firestore
+            .collection('expenses')
+            .where('title',
+                isEqualTo: event.expense.title) // Check for same title
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          // Expense with the same title exists
+          final existingDoc =
+              querySnapshot.docs.first; // Get the first matching document
+          final existingExpense = Expense.fromMap(existingDoc.data());
+
+          // Calculate updated amount
+          final updatedAmount = existingExpense.amount + event.expense.amount;
+
+          // Update the existing expense with the new amount
+          await _firestore.collection('expenses').doc(existingDoc.id).update({
+            'amount': updatedAmount, // Update only the amount
+          });
+        } else {
+          // Add a new expense if no match is found
+          await _firestore.collection('expenses').add(event.expense.toMap());
+        }
       } catch (e) {
-        emit(_emitErrorState("Failed to add expense. Error: $e"));
+        emit(_emitErrorState("Failed to add/update expense. Error: $e"));
       }
     });
 
